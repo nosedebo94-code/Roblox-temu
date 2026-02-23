@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mi Mini Roblox Web</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #87CEEB; font-family: 'Arial', sans-serif; }
+        canvas { display: block; }
+        #ui { position: absolute; top: 20px; left: 20px; font-size: 24px; color: white; text-shadow: 2px 2px #000; pointer-events: none; }
+        #btn-saltar { 
+            position: absolute; bottom: 50px; right: 50px; 
+            width: 80px; height: 80px; background: rgba(255,255,255,0.5); 
+            border-radius: 50%; border: 4px solid white; color: white;
+            display: flex; justify-content: center; align-items: center; font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">Puntos: <span id="score">0</span></div>
+    <div id="btn-saltar">SALTAR</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreEl = document.getElementById("score");
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        let score = 0;
+        
+        // Configuración del Jugador (Tipo Robloxian)
+        const player = {
+            x: 50,
+            y: canvas.height - 150,
+            width: 40,
+            height: 40,
+            color: "#E51E25", // Rojo Roblox
+            dy: 0,
+            jumpForce: 15,
+            grounded: false,
+            gravity: 0.8
+        };
+
+        // Monedas
+        let coin = { x: canvas.width, y: canvas.height - 130, size: 20 };
+
+        function drawPlayer() {
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // Ojos simples
+            ctx.fillStyle = "white";
+            ctx.fillRect(player.x + 25, player.y + 10, 8, 8);
+        }
+
+        function drawWorld() {
+            // Suelo
+            ctx.fillStyle = "#4CAF50";
+            ctx.fillRect(0, canvas.height - 100, canvas.width, 100);
+            
+            // Moneda
+            ctx.fillStyle = "#FFD700";
+            ctx.beginPath();
+            ctx.arc(coin.x, coin.y, coin.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function update() {
+            // Gravedad
+            player.y += player.dy;
+            if (player.y + player.height < canvas.height - 100) {
+                player.dy += player.gravity;
+                player.grounded = false;
+            } else {
+                player.y = canvas.height - 100 - player.height;
+                player.dy = 0;
+                player.grounded = true;
+            }
+
+            // Mover moneda hacia el jugador (Simula caminar)
+            coin.x -= 5;
+            if (coin.x < -20) {
+                coin.x = canvas.width + Math.random() * 300;
+                coin.y = canvas.height - (120 + Math.random() * 100);
+            }
+
+            // Colisión con moneda
+            let dx = player.x - coin.x;
+            let dy = player.y - coin.y;
+            let distance = Math.sqrt(dx * dx + dy * dy);
+            if (distance < player.width) {
+                score++;
+                scoreEl.innerText = score;
+                coin.x = -50; // Reset moneda
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawWorld();
+            drawPlayer();
+            requestAnimationFrame(update);
+        }
+
+        // Controles
+        function saltar() {
+            if (player.grounded) {
+                player.dy = -player.jumpForce;
+            }
+        }
+
+        window.addEventListener("keydown", (e) => { if(e.code === "Space") saltar(); });
+        document.getElementById("btn-saltar").addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            saltar();
+        });
+
+        update();
+    </script>
+</body>
+</html>
